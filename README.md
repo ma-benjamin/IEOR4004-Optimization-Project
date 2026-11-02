@@ -1,14 +1,16 @@
 # Risk-Aware Allocation to Large-Cap, High-Momentum Stocks
 
-IEOR 4004 — Optimization Models and Methods — Team 14 - Benjamin Ma - Grégoire Buot - Haixin Shen - Xuanyu Wang - Jiaxuan Yin
+IEOR 4004 — Optimization Models and Methods — Team 14
 
-## Summary of the project 
+**Team members:** Benjamin Ma, Grégoire Buot, Haixin Shen, Xuanyu Wang, Jiaxuan Yin
+
+## Summary of the project
 
 An investment manager allocates capital among large-cap U.S. stocks with strong momentum for **January 2026**. The portfolio weights are chosen to **minimize the monthly 95% Conditional Value-at-Risk (CVaR)** under a parametric Normal model, subject to:
 
 - full investment,
 - no short selling,
-- a maximum of 20% invested on any single stock,
+- at most 20% of the budget invested in any single stock,
 - a minimum expected monthly return equal to the historical mean monthly S&P 500 return.
 
 Under the joint-normality assumption the problem is a convex **second-order cone program (SOCP)**, solved with Gurobi.
