@@ -32,7 +32,7 @@ minimize    − μᵀw + kα · s
 subject to  Σᵢ wᵢ = 1                 (full investment)
             0 ≤ wᵢ ≤ 0.20             (no short selling, 20% cap)
             μᵀw ≥ b                   (beat the S&P 500 mean return)
-            ‖A w‖₂ ≤ s,  s ≥ 0        (s bounds the portfolio std. dev.)
+            ‖A w‖₂ = s,  s ≥ 0        (s bounds the portfolio std. dev.)
 ```
 
 | Symbol | Meaning |
