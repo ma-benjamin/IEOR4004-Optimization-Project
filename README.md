@@ -51,8 +51,10 @@ The objective `−μᵀw + kα·√(wᵀΣw)` is the 95% Normal CVaR of the mont
 
 | File | Description |
 |---|---|
-| `model implementation.ipynb` | Builds and solves the CVaR SOCP with Gurobi. |
-| `selected_monthly_return.csv` | Monthly returns (Jan 2021 – Dec 2025) of the 37 candidate stocks, with `PERMNO`, `Ticker` and `average_monthly_return` (μ). |
+| `Milestone4_notebook.ipynb` | Builds and solves the CVaR SOCP with Gurobi - latest version. |
+| `modified_milestone4.ipynb` | Builds and solves the CVaR SOCP with Gurobi - version2. |
+| `model implementation.ipynb` | Builds and solves the CVaR SOCP with Gurobi - version1. |
+| `selected_monthly_return_updated.csv` | Monthly returns (Jan 2021 – Mar 2026) of the 37 candidate stocks, with `PERMNO`, `Ticker` and `average_monthly_return` (μ). |
 | `covariance_matrix.csv` | 37 × 37 sample covariance matrix of monthly returns (60 observations, ddof = 1, not annualized). The first line is a header note and is skipped when loading. |
 
 All returns are monthly simple total returns in decimals.
