@@ -1,68 +1,87 @@
-# Risk-Aware Allocation to Large-Cap, High-Momentum Stocks
+ Risk-Aware Allocation to Large-Cap, High-Momentum Stocks
 
 IEOR 4004 — Optimization Models and Methods — Team 14
 
 **Team members:** Benjamin Ma, Grégoire Buot, Haixin Shen, Xuanyu Wang, Jiaxuan Yin
 
-## Summary of the project
+## Project Overview
 
-An investment manager allocates capital among large-cap U.S. stocks with strong momentum for **January 2026**. The portfolio weights are chosen to **minimize the monthly 95% Conditional Value-at-Risk (CVaR)** under a parametric Normal model, subject to:
+We construct a portfolio of large-cap U.S. stocks with strong momentum for January 2026. Our objective is to minimize monthly 95% Conditional Value-at-Risk (CVaR) under a parametric Normal model.
 
-- full investment,
-- no short selling,
-- at most 20% of the budget invested in any single stock,
-- a minimum expected monthly return equal to the historical mean monthly S&P 500 return.
+The optimization is subject to:
+- Full investment of available capital.
+- No short selling.
+- A minimum allocation of 1% and maximum of 20% for each selected stock.
+- A minimum expected monthly return equal to the historical mean monthly S&P 500 return.
+- A correlation-based diversification rule that prevents simultaneously holding two stocks with estimated correlation above 0.80.
 
-Under the joint-normality assumption the problem is a convex **second-order cone program (SOCP)**, solved with Gurobi.
+With binary holding decisions, the model is a mixed-integer second-order cone program (MISOCP), solved using Gurobi.
 
-## Candidate stocks
+## Candidate Stocks
 
-Starting from U.S. common stocks in CRSP (via WRDS), each stock is ranked independently by:
+Stocks are screened using CRSP data accessed through WRDS.
 
-- **Size**: market capitalization on the formation date (last trading day of December 2025).
-- **Momentum**: cumulative return from January to November 2025 (12–2 convention; December excluded to limit short-term reversal).
+- **Size:** Market capitalization at the end of December 2025.
+- **Momentum:** Cumulative return from January to November 2025, following the 12–2 momentum convention.
 
-Each ranking is split into 15 groups. The candidate set is the intersection of the largest-size group and the highest-momentum group, which yields **37 stocks**.
+Stocks are independently ranked into 15 groups by each factor. The intersection of the highest-size and highest-momentum groups produces 37 candidate stocks.
 
-## Model
+## Optimization Model
 
-```
-minimize    − μᵀw + kα · s
+The objective is to minimize:
 
-subject to  Σᵢ wᵢ = 1                 (full investment)
-            0 ≤ wᵢ ≤ 0.20             (no short selling, 20% cap)
-            μᵀw ≥ b                   (beat the S&P 500 mean return)
-            ‖A w‖₂ = s,  s ≥ 0        (s bounds the portfolio std. dev.)
-```
+    -μᵀw + kα ‖Aw‖₂
 
-| Symbol | Meaning |
+Subject to:
+
+    Σᵢ wᵢ = 1
+    0.01zᵢ ≤ wᵢ ≤ 0.20zᵢ
+    μᵀw ≥ b
+    zᵢ + zⱼ ≤ 1, for (i,j) ∈ P
+    zᵢ ∈ {0,1}
+
+where:
+
+| Symbol | Definition |
 |---|---|
-| `w` | Portfolio weights (decision variable), one per candidate stock |
-| `s` | Upper bound on the portfolio monthly standard deviation (decision variable) |
-| `μ` | Sample mean monthly return of each stock, Jan 2021 – Dec 2025 (60 months) |
-| `Σ` | Sample covariance matrix of monthly returns over the same window |
-| `A` | Matrix such that `AᵀA = Σ`, so that `‖Aw‖₂ = √(wᵀΣw)` |
-| `kα` | `φ(Φ⁻¹(α)) / (1 − α) ≈ 2.0627` for α = 0.95 (Normal CVaR constant) |
-| `b` | Mean monthly S&P 500 total return over the same window |
+| wᵢ | Portfolio weight of stock i |
+| zᵢ | Binary variable indicating whether stock i is selected |
+| μ | Estimated monthly stock returns, January 2021–December 2025 |
+| Σ | Sample covariance matrix over the same 60-month window |
+| A | Covariance factor satisfying AᵀA = Σ |
+| kα | Normal CVaR coefficient, approximately 2.062713 at α = 0.95 |
+| b | Historical mean monthly S&P 500 return |
+| P | Stock pairs whose estimated return correlation exceeds 0.80 |
 
-The objective `−μᵀw + kα·√(wᵀΣw)` is the 95% Normal CVaR of the monthly portfolio loss.
+The correlation restriction is intended to provide an additional diversification rule beyond the covariance-based CVaR objective.
 
-## Repository contents
+For computational implementation, auxiliary variables are used to represent the portfolio standard deviation in Gurobi.
+
+## Repository Contents
 
 | File | Description |
 |---|---|
-| `Milestone4_notebook.ipynb` | Builds and solves the CVaR SOCP with Gurobi - latest version. |
-| `modified_milestone4.ipynb` | Builds and solves the CVaR SOCP with Gurobi - version2. |
-| `model implementation.ipynb` | Builds and solves the CVaR SOCP with Gurobi - version1. |
-| `selected_monthly_return_updated.csv` | Monthly returns (Jan 2021 – Mar 2026) of the 37 candidate stocks, with `PERMNO`, `Ticker` and `average_monthly_return` (μ). |
-| `covariance_matrix.csv` | 37 × 37 sample covariance matrix of monthly returns (60 observations, ddof = 1, not annualized). The first line is a header note and is skipped when loading. |
+| `model.ipynb` | Main Gurobi optimization model, including portfolio constraints, optimal weights, out-of-sample evaluation, and sanity checks. |
+| `selected_monthly_return.csv` | Monthly returns for 37 candidate stocks, including 2026 observations and historical mean returns. |
+| `covariance_matrix.csv` | 37 × 37 sample covariance matrix estimated using 60 monthly observations. |
+| `SP500_monthly_202001_202603.csv` | S&P 500 monthly returns used for the benchmark. |
+| `jan_2026_monthly_returns.csv` | January 2026 stock returns used for out-of-sample evaluation. |
+| `README.md` | Project documentation. |
 
-All returns are monthly simple total returns in decimals.
+## Model Validation
 
+The implementation includes independent checks of:
+- Full investment and portfolio weight bounds.
+- Minimum expected return requirement.
+- Correlation-based exclusion constraints.
+- Portfolio standard deviation and CVaR calculations.
+- Maximum constraint violation reported by Gurobi.
 
-## Data source
+January 2026 realized stock returns are used to evaluate the optimized portfolio out of sample. Only information available through December 2025 is used for parameter estimation and portfolio construction.
 
-CRSP U.S. Stock Databases, accessed through WRDS (<https://wrds-www.wharton.upenn.edu/>). Raw CRSP data is not redistributed in this repository; only the derived monthly returns and covariance matrix are included.
+## Data Source
+
+CRSP U.S. Stock Databases, accessed through WRDS. Raw CRSP data is not redistributed; the repository contains derived monthly returns and covariance data.
 
 ## References
 
